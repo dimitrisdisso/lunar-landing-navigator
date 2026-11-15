@@ -156,4 +156,14 @@ class SyntheticProvider:
 
 
 def make_provider(cfg):
-    return SyntheticProvider() if cfg.demo else RasterioProvider(cfg.local_dir)
+    if cfg.demo:
+        return SyntheticProvider()
+    try:
+        return RasterioProvider(cfg.local_dir)
+    except SystemExit as exc:
+        if "rasterio" in str(exc).lower():
+            import sys
+            print("WARNING: rasterio not available; falling back to synthetic terrain. "
+                  "Install rasterio for real NASA LOLA terrain.", file=sys.stderr)
+            return SyntheticProvider()
+        raise
