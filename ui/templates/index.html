@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunar Landing Navigator</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LANDING SCREEN ═══════════════════════════ -->
+<div id="landing-screen" class="screen active">
+  <div class="landing-bg"></div>
+  <div class="landing-content">
+    <div class="landing-logo">
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="27" stroke="#d4a23c" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="28" cy="28" r="18" fill="#181c22" stroke="#d4a23c" stroke-width="1"/>
+        <circle cx="28" cy="28" r="10" fill="#2a2f37"/>
+        <circle cx="22" cy="24" r="3" fill="#181c22" opacity="0.8"/>
+        <circle cx="31" cy="30" r="4" fill="#181c22" opacity="0.6"/>
+        <circle cx="25" cy="33" r="2" fill="#181c22" opacity="0.7"/>
+      </svg>
+    </div>
+    <h1 class="landing-title">Lunar Landing<br>Navigator</h1>
+    <p class="landing-sub">NASA Space Apps Challenge · South Polar Site Analysis</p>
+
+    <div class="date-form">
+      <label class="form-label">Select Landing Date &amp; Time (UTC)</label>
+      <div class="date-row">
+        <input type="date" id="date-input" class="date-input"
+               min="2025-01-01" max="2035-12-31"
+               value="2027-03-15">
+        <div class="days-wrap">
+          <label class="days-label">Arrival Time (UTC)</label>
+          <input type="time" id="time-input" class="days-input"
+                 value="00:00">
+        </div>
+      </div>
+      <div class="date-row">
+        <div class="days-wrap" style="flex:1">
+          <label class="days-label">Surface Stay (days)</label>
+          <input type="number" id="days-input" class="days-input"
+                 min="1" max="30" step="0.5" value="6.5">
+        </div>
+      </div>
+      <button id="analyze-btn" class="analyze-btn">
+        <span class="btn-icon">◎</span>
+        <span class="btn-text">Find Best Landing Site</span>
+      </button>
+    </div>
+    <p class="landing-note">
+      Terrain: NASA LRO LOLA · Ephemeris: NASA JPL Horizons · Thermal: Hayne+2017 · Globe imagery: NASA LRO data (via Solar System Scope)
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ LOADING SCREEN ══════════════════════════ -->
+<div id="loading-screen" class="screen">
+  <div class="loading-content">
+    <div class="loading-moon"></div>
+    <h2 class="loading-title">Finding Best Landing Site</h2>
+    <p id="loading-status" class="loading-status">Initialising…</p>
+    <div class="log-box" id="log-box"></div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════ MAIN APP ══════════════════════════════ -->
+<div id="app-screen" class="screen">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <button class="back-btn" id="back-btn" title="New search">← New Search</button>
+    <div class="topbar-title">
+      <span class="topbar-date" id="topbar-date"></span>
+      <span class="topbar-sep">·</span>
+      <span class="topbar-source" id="topbar-source"></span>
+    </div>
+    <div class="site-tabs" id="site-tabs"></div>
+  </header>
+
+  <!-- Three-column layout -->
+  <div class="main-layout">
+
+    <!-- LEFT PANEL -->
+    <aside class="panel panel-left" id="panel-left">
+      <div class="panel-header">Mission Summary</div>
+
+      <div class="coord-block" id="coord-block">
+        <div class="coord-label">Touchdown Coordinates</div>
+        <div class="coord-value" id="coord-lat">—</div>
+        <div class="coord-value" id="coord-lon">—</div>
+        <div class="coord-value coord-time" id="coord-time">—</div>
+        <div class="score-row">
+          <div class="score-badge" id="score-badge">—</div>
+          <div class="score-label">/ 100</div>
+          <div class="constraints-badge" id="constraints-badge">—</div>
+        </div>
+      </div>
+
+      <!-- Single scrollable area for everything below the coord block -->
+      <div class="left-scroll" id="left-scroll">
+        <div class="key-stats" id="key-stats"></div>
+        <div class="score-breakdown" id="score-breakdown">
+          <div class="sb-title">Score Breakdown</div>
+        </div>
+        <div class="constraints-list" id="constraints-list">
+          <div class="cl-title">NASA Artemis III Constraints</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTRE: 3D GLOBE -->
+    <main class="globe-container" id="globe-container">
+      <canvas id="moon-canvas"></canvas>
+      <div class="globe-hint" id="globe-hint">Scroll to zoom · Right-drag to look around</div>
+      <div class="globe-legend" id="globe-legend"></div>
+
+      <!-- Time slider -->
+      <div class="time-slider-wrap" id="time-slider-wrap">
+        <div class="slider-labels">
+          <span class="slider-label-left" id="slider-label-left">Arrival</span>
+          <span class="slider-label-center" id="slider-label-center">Day 0</span>
+          <span class="slider-label-right" id="slider-label-right">End of stay</span>
+        </div>
+        <div class="slider-track-wrap">
+          <input type="range" id="time-slider" class="time-slider"
+                 min="0" max="1000" value="0" step="1">
+        </div>
+        <div class="slider-time-display" id="slider-time-display">—</div>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL -->
+    <aside class="panel panel-right" id="panel-right">
+      <div class="panel-header">Detailed Assessment</div>
+
+      <!-- Single scrollable column: WAC imagery + sections list -->
+      <div class="right-scroll" id="right-scroll">
+
+        <!-- WAC Imagery Viewer -->
+        <div class="wac-viewer" id="wac-viewer">
+          <div class="wac-header">
+            <span class="wac-title">NASA LROC WAC Imagery</span>
+            <div class="wac-controls">
+              <button class="wac-zoom-btn" id="wac-zoom-out" title="Zoom out">−</button>
+              <span class="wac-zoom-label" id="wac-zoom-label">z7</span>
+              <button class="wac-zoom-btn" id="wac-zoom-in" title="Zoom in">+</button>
+            </div>
+          </div>
+          <div class="wac-canvas-wrap">
+            <canvas id="wac-canvas" class="wac-canvas"></canvas>
+            <div class="wac-crosshair"></div>
+            <div class="wac-caption" id="wac-caption">Select a site to load imagery</div>
+          </div>
+          <div class="wac-note">LRO WAC mosaic · ~100 m/px · cannot resolve boulders</div>
+        </div>
+
+        <div class="sections-list" id="sections-list">
+          <!-- Filled by JS -->
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- Three.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="/static/js/globe.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

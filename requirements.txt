@@ -1,0 +1,12 @@
+# Lunar Landing Navigator – Python 3.9+
+# Core (always needed)
+numpy>=1.24
+scipy>=1.10
+
+# Real NASA terrain data (skip if using --demo)
+# rasterio>=1.3
+
+# rasterio on Windows is easiest via conda:
+#   conda install -c conda-forge rasterio
+# or via pip (pre-built wheel):
+#   pip install rasterio
