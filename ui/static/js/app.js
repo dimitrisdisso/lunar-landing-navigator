@@ -24,19 +24,31 @@
   }
 
   // ── landing form ───────────────────────────────────────────────────────────
-  $('analyze-btn').addEventListener('click', () => {
-    const date = $('date-input').value;
-    const time = $('time-input').value || '00:00';
-    const days = parseFloat($('days-input').value) || 6.5;
-    if (!date) { alert('Please select a date.'); return; }
-    startAnalysis(date, time, days);
-  });
+  function bindLandingEvents() {
+    const analyzeBtn = $('analyze-btn');
+    const backBtn = $('back-btn');
 
-  $('back-btn').addEventListener('click', () => {
-    if (pollTimer) clearInterval(pollTimer);
-    Globe.pauseAutoSpin && Globe.pauseAutoSpin();
-    showScreen('landing');
-  });
+    if (!analyzeBtn || !backBtn) {
+      console.error('Landing UI elements not found; page may still be loading.');
+      return;
+    }
+
+    analyzeBtn.addEventListener('click', () => {
+      const date = $('date-input').value;
+      const time = $('time-input').value || '00:00';
+      const days = parseFloat($('days-input').value) || 6.5;
+      if (!date) { alert('Please select a date.'); return; }
+      startAnalysis(date, time, days);
+    });
+
+    backBtn.addEventListener('click', () => {
+      if (pollTimer) clearInterval(pollTimer);
+      Globe.pauseAutoSpin && Globe.pauseAutoSpin();
+      showScreen('landing');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', bindLandingEvents);
 
   // ── analysis request ───────────────────────────────────────────────────────
   function startAnalysis(date, time, days) {
@@ -136,11 +148,11 @@
     // Legend (single site)
     const legendEl = $('globe-legend');
     legendEl.innerHTML = '';
-    const site = data.sites[0];
+    const siteLegend = data.sites[0];
     legendEl.innerHTML += `
       <div class="legend-item">
         <div class="legend-dot" style="background:#d4a23c"></div>
-        <span>Landing: ${_ns(site.lat)}, ${_ew(site.lon)}</span>
+        <span>Landing: ${_ns(siteLegend.lat)}, ${_ew(siteLegend.lon)}</span>
       </div>`;
     legendEl.innerHTML += `
       <div class="legend-item"><div class="legend-dot" style="background:#e8c25a"></div><span>☀ Sun</span></div>
