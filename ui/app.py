@@ -443,6 +443,10 @@ def status(job_id):
 
 
 if __name__ == "__main__":
+    host = "0.0.0.0"
+    port = 5000
+    url = f"http://localhost:{port}"
     print("\n  Lunar Landing Navigator")
-    print("  Open your browser at:  http://localhost:5000\n")
-    app.run(debug=False, port=5000, threaded=True)
+    print(f"  Open your browser at:  {url}")
+    print(f"  Server listening on:   http://{host}:{port}\n")
+    app.run(debug=False, host=host, port=port, threaded=True)
